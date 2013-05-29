@@ -97,9 +97,6 @@ function get_id () {
     echo `"$@" | grep ' id ' | awk '{print $4}'`
 }
 
-################ Install python-keystoneclient ###################
-cd /opt; git clone https://github.com/openstack/python-keystoneclient.git ; cd python-keystoneclient ; python setup.py install
-cd ~
 
 
 echo "===================================ENV VAR============================"
