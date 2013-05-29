@@ -19,7 +19,7 @@ cd /opt ; git clone https://github.com/openstack/keystone.git ; cd /opt/keystone
 
 # Install packages from local cache
 # pip install -r /opt/keystone/tools/pip-requires
-pip install --no-index --find-links="file:///root/pip/" -r /opt/keystone/tools/pip-requires
+pip install --no-index --find-links="file://$ORIGINAL_DIR/pip/" -r /opt/keystone/tools/pip-requires
 
 echo "=================================Starting to install KEYSTONE==========================================="
 echo
