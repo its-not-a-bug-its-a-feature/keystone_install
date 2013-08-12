@@ -15,7 +15,9 @@ apt-get update ; apt-get -y install git python-pip
 #For compiling dependencies of several pip libraries , you need to install following packages first
 apt-get install -y gcc python-dev libxml2-dev libxslt-dev
 
+#Clone the Keystone Source code from GitHub and check the stable/grizzly version
 cd /opt ; git clone https://github.com/openstack/keystone.git ; cd /opt/keystone
+git checkout stable/grizzly
 
 # Install packages from local cache
 # pip install -r /opt/keystone/tools/pip-requires
