@@ -158,9 +158,9 @@ keystone service-create --name=swift \
                         --description="Swift Service")
 if [[ -z "$DISABLE_ENDPOINTS" ]]; then
     keystone endpoint-create --region RegionOne --service-id $SWIFT_SERVICE \
-        --publicurl   "http://$SWIFT_IP/v1/SWIFTSTACK_\$(tenant_id)s" \
+        --publicurl   "http://$SWIFT_IP/v1/KEY_\$(tenant_id)s" \
         --adminurl    "http://$CONTROLLER_ADMIN_ADDRESS/v1" \
-        --internalurl "http://$CONTROLLER_INTERNAL_ADDRESS/v1/SWIFTSTACK_\$(tenant_id)s"
+        --internalurl "http://$CONTROLLER_INTERNAL_ADDRESS/v1/KEY_\$(tenant_id)s"
 fi
 
 echo "==================Smaple data Inject Finished=========================="
