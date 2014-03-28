@@ -126,7 +126,7 @@ SERVICE_TENANT=$(get_id keystone tenant-create --name=service \
                                                --description "Service Tenant")
 
 SWIFT_USER=$(get_id keystone user-create --name=swift \
-                                         --pass=swiftpass \
+                                         --pass=password \
                                          --tenant-id $SERVICE_TENANT)
 
 keystone user-role-add --user-id $SWIFT_USER \
