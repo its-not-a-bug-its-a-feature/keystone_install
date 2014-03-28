@@ -185,10 +185,26 @@ echo "================== Test Keystone V3 API to get TOKEN/Service Catalog of us
 
 curl -d '{"auth":{"identity":{"methods":["password"],"password":{"user":{"domain":{"name":"default"},"name":"swiftstack","password":"password"}}},"scope":{"project":{"domain":{"name":"default"},"name":"SS"}}}}' -H "Content-type: application/json" http://localhost:5000/v3/auth/tokens | python -mjson.tool
 
-echo "===========DONE============="
+echo "===========Keystone Middleware setting for this deployment============="
 
+echo "[ Keystone Auth ]"
+echo "operator_roles : admin, swiftoperator, _member_"
+echo "reseller_prefix : KEY_"
+echo "reseller_admin_role : ResellerAdmin"
+echo
+echo "[Keystone Auth Token Support]"
+echo "auth_admin_prefix : (leave blank)"
+echo "auth_host : \$IP_OF_KEYSTONE_HOST"
+echo "auth_port : 35357"
+echo "auth_protocol : http"
+echo "auth_uri : http://\$KEYSTONE_IP:5000/"
+echo "admin_user : swift"
+echo "admin_password : password"
+echo "admin_tenant_name : service"
+echo "signing_dir : /var/cache/swift"
+echo "include_service_catalog : False"
 
-
+echo "=====Done====="
 
 
 
