@@ -14,7 +14,7 @@ apt-get update ; apt-get -y install git python-pip
 
 # Upgrade pip itself
 pip install --upgrade pip
-newgrp
+hash -r
 pip install --upgrade pbr
 
 #For compiling dependencies of several pip libraries , you need to install following packages first
@@ -116,7 +116,7 @@ DEMO_TENANT=$(get_id keystone tenant-create --name=demo \
                                             --description "Default Tenant")
 
 ADMIN_USER=$(get_id keystone user-create --name=admin \
-                                         --pass=secrete)
+                                         --pass=secret)
 
 ADMIN_ROLE=$(get_id keystone role-create --name=admin)
 
@@ -209,6 +209,10 @@ echo "admin_tenant_name : service"
 echo "signing_dir : /var/cache/swift"
 echo "include_service_catalog : False"
 
+echo "========== DB information =========="
+echo "user : root"
+echo "password : swiftstack"
+echo ""
 echo "=====Done====="
 
 
