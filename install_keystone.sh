@@ -12,7 +12,7 @@ apt-get update ; apt-get -y install git python-pip
 echo `which pip`
 # Upgrade pip itself
 pip install --upgrade pip
-pip install --upgrade pbr
+/usr/local/bin/pip install --upgrade pbr
 
 python -c 'import pbr.version' || exit 1
 
@@ -24,7 +24,7 @@ cd /opt ; git clone https://github.com/openstack/keystone.git ; cd /opt/keystone
 git checkout stable/havana
 
 # Install packages from local cache
-pip install -r /opt/keystone/requirements.txt
+/usr/local/bin/pip install -r /opt/keystone/requirements.txt
 
 echo "=================================Starting to install KEYSTONE==========================================="
 echo
