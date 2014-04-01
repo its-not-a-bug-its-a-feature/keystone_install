@@ -14,6 +14,7 @@ apt-get update ; apt-get -y install git python-pip
 
 # Upgrade pip itself
 pip install --upgrade pip
+newgrp
 pip install --upgrade pbr
 
 #For compiling dependencies of several pip libraries , you need to install following packages first
