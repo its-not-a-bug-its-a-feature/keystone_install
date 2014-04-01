@@ -9,7 +9,6 @@ ORIGINAL_DIR=$(pwd)
 
 apt-get update ; apt-get -y install git python-pip
 
-echo `which pip`
 # Upgrade pip itself
 pip install --upgrade pip
 /usr/local/bin/pip install --upgrade pbr
