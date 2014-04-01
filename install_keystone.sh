@@ -7,11 +7,9 @@ echo
 echo 
 ORIGINAL_DIR=$(pwd)
 
-#FIX me
-#PASSWORD=password
-
 apt-get update ; apt-get -y install git python-pip
 
+echo `which pip`
 # Upgrade pip itself
 pip install --upgrade pip
 pip install --upgrade pbr
@@ -114,6 +112,7 @@ function get_id () {
 echo "===================================ENV VAR============================"
 echo $SERVICE_TOKEN
 echo $SERVICE_ENDPOINT
+set -x
 #
 # Default tenant
 #
