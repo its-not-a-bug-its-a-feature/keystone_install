@@ -16,6 +16,8 @@ apt-get update ; apt-get -y install git python-pip
 pip install --upgrade pip
 pip install --upgrade pbr
 
+python -c 'import pbr.version' || exit 1
+
 #For compiling dependencies of several pip libraries , you need to install following packages first
 apt-get install -y gcc python-dev libxml2-dev libxslt-dev
 
@@ -64,6 +66,9 @@ chown -R keystone:keystone /var/log/keystone
 #Populate Data into keystone DB
 keystone-manage db_sync
 
+#setup pki
+keystone-manage pki_setup --keystone-user keystone --keystone-group keystone
+
 sleep 1
 # Copy upstart and service start script 
 ################## UPSTART ######################
@@ -73,6 +78,7 @@ cd $ORIGINAL_DIR ; cp keystone-init.d /etc/init.d/keystone ; cp keystone.conf-in
 service keystone start 
 sleep 3
 service keystone status
+
 
 ################################################
 
