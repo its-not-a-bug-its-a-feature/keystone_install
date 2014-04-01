@@ -10,4 +10,4 @@ Please run as root
 
 This is a quick keystone deploying script
 
-The Keystone Version is Fixed to ``stable/grizzly``
+The Keystone Version is Fixed to ``stable/Havana``
