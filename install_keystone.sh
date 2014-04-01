@@ -12,16 +12,18 @@ ORIGINAL_DIR=$(pwd)
 
 apt-get update ; apt-get -y install git python-pip
 
+# Upgrade pip itself
+pip install --upgrade pip
+
 #For compiling dependencies of several pip libraries , you need to install following packages first
 apt-get install -y gcc python-dev libxml2-dev libxslt-dev
 
 #Clone the Keystone Source code from GitHub and check the stable/grizzly version
 cd /opt ; git clone https://github.com/openstack/keystone.git ; cd /opt/keystone
-git checkout stable/grizzly
+git checkout stable/havana
 
 # Install packages from local cache
-# pip install -r /opt/keystone/tools/pip-requires
-pip install --no-index --find-links="file://$ORIGINAL_DIR/pip/" -r /opt/keystone/tools/pip-requires
+pip install -r /opt/keystone/requirements.txt
 
 echo "=================================Starting to install KEYSTONE==========================================="
 echo
