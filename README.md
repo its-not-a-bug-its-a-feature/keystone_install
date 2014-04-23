@@ -9,6 +9,7 @@ Please run as root
 	git clone https://github.com/swiftstack/keystone_install.git
 	cd keystone_install
 	./install_keystone.sh
+	./default_keystone_config.sh
 
 This is a quick keystone deploying script
 

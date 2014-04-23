@@ -1,10 +1,6 @@
 #!/usr/bin/env bash 
 
 
-echo "Please Enter your Swift PROXY IP/Hostname:"
-read SWIFT_IP
-echo 
-echo 
 ORIGINAL_DIR=$(pwd)
 
 #FIX me
@@ -107,8 +103,6 @@ function get_id () {
 
 
 echo "===================================ENV VAR============================"
-echo $SERVICE_TOKEN
-echo $SERVICE_ENDPOINT
 #
 # Default tenant
 #
@@ -154,42 +148,6 @@ if [[ -z "$DISABLE_ENDPOINTS" ]]; then
 fi
 
 
-#
-# Swift service
-#
-SWIFT_SERVICE=$(get_id \
-keystone service-create --name=swift \
-                        --type="object-store" \
-                        --description="Swift Service")
-if [[ -z "$DISABLE_ENDPOINTS" ]]; then
-    keystone endpoint-create --region RegionOne --service-id $SWIFT_SERVICE \
-        --publicurl   "http://$SWIFT_IP/v1/KEY_\$(tenant_id)s" \
-        --adminurl    "http://$CONTROLLER_ADMIN_ADDRESS/v1" \
-        --internalurl "http://$CONTROLLER_INTERNAL_ADDRESS/v1/KEY_\$(tenant_id)s"
-fi
-
-echo "==================Smaple data Inject Finished=========================="
-echo
-sleep 2
-echo
-echo "==================Create User/Password/Tenant : swiftstack/password/SS===================="
-
-SS_TENANT=$(get_id \
-keystone tenant-create --name SS --enabled true --description "SwiftStack-DEV Tenant")
-keystone user-create --name swiftstack --pass password --tenant-id $SS_TENANT --email support@swiftstack.com --enabled true
-
-echo
-echo "================= Test v2.0 API to get TOKEN/Service Catalog of user swiftstack =================="
-sleep 2
-
-curl -d '{"auth":{"passwordCredentials":{"username": "swiftstack", "password": "password"},"tenantName":"SS"}}' -H "Content-type: application/json" http://localhost:5000/v2.0/tokens | python -mjson.tool
-
-sleep 2
-echo
-echo "================== Test Keystone V3 API to get TOKEN/Service Catalog of user swiftstack ====================="
-
-curl -d '{"auth":{"identity":{"methods":["password"],"password":{"user":{"domain":{"name":"default"},"name":"swiftstack","password":"password"}}},"scope":{"project":{"domain":{"name":"default"},"name":"SS"}}}}' -H "Content-type: application/json" http://localhost:5000/v3/auth/tokens | python -mjson.tool
-
 echo "===========Keystone Middleware setting for this deployment============="
 
 echo "[ Keystone Auth ]"
@@ -213,6 +171,13 @@ echo "========== DB information =========="
 echo "user : root"
 echo "password : swiftstack"
 echo ""
+echo ""
+echo "========== Service Information ========="
+echo "Service Token: $SERVICE_TOKEN"
+echo "Service Endpoint: $SERVICE_ENDPOINT"
+echo ""
+echo ""
+echo "To install a default swift service and user, run ./default_keystone_config.sh
 echo "=====Done====="
 
 
