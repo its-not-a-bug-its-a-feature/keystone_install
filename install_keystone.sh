@@ -1,7 +1,7 @@
 #!/usr/bin/env bash 
 
 
-echo "Please Enter your Swift PROXY IP/Hostname:"
+echo "Please Enter your Swift and Keystone IP for the Service Catalog:"
 read SWIFT_IP
 echo 
 echo 
@@ -10,46 +10,34 @@ ORIGINAL_DIR=$(pwd)
 #FIX me
 #PASSWORD=password
 
-apt-get update ; apt-get -y install git python-pip
+apt-get -y install ubuntu-cloud-keyring
 
-# Upgrade pip itself
-pip install --upgrade pip
-hash -r
-pip install --upgrade pbr
+cat > /etc/apt/sources.list.d/20-cloudarchive.list  << EOF
+deb http://ubuntu-cloud.archive.canonical.com/ubuntu precise-updates/grizzly main
+deb-src http://ubuntu-cloud.archive.canonical.com/ubuntu precise-updates/grizzly main
+EOF
 
-#For compiling dependencies of several pip libraries , you need to install following packages first
-apt-get install -y gcc python-dev libxml2-dev libxslt-dev
+apt-get update ; apt-get -y install keystone
 
-#Clone the Keystone Source code from GitHub and check the stable/grizzly version
-cd /opt ; git clone https://github.com/openstack/keystone.git ; cd /opt/keystone
-git checkout stable/havana
-
-# Install packages from local cache
-pip install -r /opt/keystone/requirements.txt
 
 echo "=================================Starting to install KEYSTONE==========================================="
 echo
 echo
-cd /opt/keystone ; python setup.py install
-
-# Create Keystone configurartion Folder
-mkdir -p /etc/keystone ; cd /etc/keystone ; cp /opt/keystone/etc/* /etc/keystone/
-rename 's/\.sample//' /etc/keystone/*.sample
 
 
 #Prepare MySQL 
-sudo debconf-set-selections <<< 'mysql-server mysql-server/root_password password swiftstack'
-sudo debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password swiftstack'
+sudo debconf-set-selections <<< 'mysql-server mysql-server/root_password password cangetin'
+sudo debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password cangetin'
 apt-get -y install mysql-server python-mysqldb
 mysql -uroot -pswiftstack -e "CREATE DATABASE keystone"
-mysql -uroot -pswiftstack -e "GRANT ALL ON keystone.* TO 'keystone'@'*' IDENTIFIED BY 'swiftstack'"
-mysql -uroot -pswiftstack -e "GRANT ALL ON keystone.* TO 'keystone'@'localhost' IDENTIFIED BY 'swiftstack'"
+mysql -uroot -pswiftstack -e "GRANT ALL ON keystone.* TO 'keystone'@'*' IDENTIFIED BY 'cangetin'"
+mysql -uroot -pswiftstack -e "GRANT ALL ON keystone.* TO 'keystone'@'localhost' IDENTIFIED BY 'cangetin'"
 sudo sed -i 's/127.0.0.1/0.0.0.0/g' /etc/mysql/my.cnf
 sudo service mysql restart
 
 #Configuration Section
 
-sed -e 's/# connection = sqlite:\/\/\/keystone.db/connection = mysql:\/\/keystone:swiftstack@localhost\/keystone/' -i /etc/keystone/keystone.conf
+sed -e 's/# connection = sqlite:\/\/\/keystone.db/connection = mysql:\/\/keystone:cangetin@localhost\/keystone/' -i /etc/keystone/keystone.conf
 sed 's/#token_format =/token_format = UUID/' -i /etc/keystone/keystone.conf
 sed 's/ec2_extension user_crud_extension/ec2_extension s3_extension user_crud_extension/' -i /etc/keystone/keystone-paste.ini
 
@@ -78,9 +66,9 @@ service keystone status
 ################################################
 
 ###### Inject Sample Data ######
-CONTROLLER_PUBLIC_ADDRESS=${CONTROLLER_PUBLIC_ADDRESS:-localhost}
-CONTROLLER_ADMIN_ADDRESS=${CONTROLLER_ADMIN_ADDRESS:-localhost}
-CONTROLLER_INTERNAL_ADDRESS=${CONTROLLER_INTERNAL_ADDRESS:-localhost}
+CONTROLLER_PUBLIC_ADDRESS=${SWIFT_IP}
+CONTROLLER_ADMIN_ADDRESS=${SWIFT_IP}
+CONTROLLER_INTERNAL_ADDRESS=${127.0.0.1}
 
 #TOOLS_DIR=$(cd $(dirname "$0") && pwd)
 KEYSTONE_CONF=${KEYSTONE_CONF:-/etc/keystone/keystone.conf}
@@ -175,7 +163,7 @@ echo
 echo "==================Create User/Password/Tenant : swiftstack/password/SS===================="
 
 SS_TENANT=$(get_id \
-keystone tenant-create --name SS --enabled true --description "SwiftStack-DEV Tenant")
+keystone tenant-create --name SS --enabled true --description "Test Tenant")
 keystone user-create --name swiftstack --pass password --tenant-id $SS_TENANT --email support@swiftstack.com --enabled true
 
 echo
@@ -211,7 +199,7 @@ echo "include_service_catalog : False"
 
 echo "========== DB information =========="
 echo "user : root"
-echo "password : swiftstack"
+echo "password : cangetin"
 echo ""
 echo "=====Done====="
 
