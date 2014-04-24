@@ -15,7 +15,7 @@ echo "=================================Starting to install KEYSTONE=============
 echo
 echo
 
-apt-get -y install ubuntu-cloud-keyring
+apt-get -y install ubuntu-cloud-keyring curl
 
 cat > /etc/apt/sources.list.d/20-cloudarchive.list  << EOF
 deb http://ubuntu-cloud.archive.canonical.com/ubuntu precise-updates/havana main
@@ -75,7 +75,7 @@ echo
 ###### Inject Sample Data ######
 CONTROLLER_PUBLIC_ADDRESS=$SWIFT_IP
 CONTROLLER_ADMIN_ADDRESS=$SWIFT_IP
-CONTROLLER_INTERNAL_ADDRESS='127.0.0.1'
+CONTROLLER_INTERNAL_ADDRESS="127.0.0.1"
 
 KEYSTONE_CONF=${KEYSTONE_CONF:-/etc/keystone/keystone.conf}
 
@@ -121,9 +121,7 @@ RESELLER_ROLE=$(get_id keystone role-create --name=ResellerAdmin)
 MEMBER_ROLE=$(get_id keystone role-create --name=Member)
 
 
-keystone user-role-add --user-id $ADMIN_USER \
-                       --role-id $ADMIN_ROLE \
-                       --tenant-id $DEMO_TENANT
+keystone user-role-add --user admin --role admin --tenant demo
 
 #
 # Service tenant
@@ -135,10 +133,7 @@ SWIFT_USER=$(get_id keystone user-create --name=swift \
                                          --pass=password \
                                          --tenant-id $SERVICE_TENANT)
 
-keystone user-role-add --user-id $SWIFT_USER \
-                       --role-id $ADMIN_ROLE \
-                       --tenant-id $SERVICE_TENANT
-
+keystone user-role-add --user admin --role admin --tenant demo
 
 #
 # Keystone service
@@ -148,10 +143,7 @@ keystone service-create --name=keystone \
                         --type=identity \
                         --description="Keystone Identity Service")
 if [[ -z "$DISABLE_ENDPOINTS" ]]; then
-    keystone endpoint-create --region LON --service-id $KEYSTONE_SERVICE \
-        --publicurl "http://$CONTROLLER_PUBLIC_ADDRESS:\$(public_port)s/v2.0" \
-        --adminurl "http://$CONTROLLER_ADMIN_ADDRESS:\$(admin_port)s/v2.0" \
-        --internalurl "http://$CONTROLLER_INTERNAL_ADDRESS:\$(public_port)s/v2.0"
+    keystone endpoint-create --region LON --service-id $KEYSTONE_SERVICE --publicurl "http://$CONTROLLER_PUBLIC_ADDRESS/v2.0" --adminurl "http://$CONTROLLER_ADMIN_ADDRESS/v2.0" --internalurl "http://$CONTROLLER_INTERNAL_ADDRESS/v2.0"
 fi
 
 
@@ -163,10 +155,7 @@ keystone service-create --name=swift \
                         --type="object-store" \
                         --description="Swift Service")
 if [[ -z "$DISABLE_ENDPOINTS" ]]; then
-    keystone endpoint-create --region LON --service-id $SWIFT_SERVICE \
-        --publicurl   "http://$SWIFT_IP/v1/KEY_\$(tenant_id)s" \
-        --adminurl    "http://$CONTROLLER_ADMIN_ADDRESS/v1" \
-        --internalurl "http://$CONTROLLER_INTERNAL_ADDRESS/v1/KEY_\$(tenant_id)s"
+    keystone endpoint-create --region LON --service-id $SWIFT_SERVICE --publicurl   "http://$SWIFT_IP/v1/AUTH_\$(tenant_id)s" --adminurl    "http://$CONTROLLER_ADMIN_ADDRESS/v1" --internalurl "http://$CONTROLLER_INTERNAL_ADDRESS/v1/AUTH_\$(tenant_id)s"
 fi
 
 echo "==================Smaple data Inject Finished=========================="
@@ -175,14 +164,14 @@ sleep 2
 echo
 echo "==================Create User/Password/Tenant : swiftstack/password/SS===================="
 
-$SOHONET_T_NAME=sohonet
+SOHONET_T_NAME=sohonet
 
 SOHONET_TENANT=$(get_id \
 keystone tenant-create --name $SOHONET_T_NAME --enabled true --description "Sohonet Tenant")
 keystone user-create --name demo1 --pass password --tenant-id $SOHONET_TENANT --email support@sohonet.com --enabled true
-keystone user-role-add --user-id 'demo1' \
-                       --role-id 'SwiftOperator' \
-                       --tenant-id $SOHONET_T_NAME
+keystone user-role-add --user 'demo1' \
+                       --role 'SwiftOperator' \
+                       --tenant  $SOHONET_T_NAME
 keystone user-create --name demo2 --pass password --tenant-id $SOHONET_TENANT --email support@sohonet.com --enabled true
 keystone user-role-add --user 'demo2' \
                        --role 'SwiftOperator' \
