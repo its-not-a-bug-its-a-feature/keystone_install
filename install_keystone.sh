@@ -10,6 +10,11 @@ ORIGINAL_DIR=$(pwd)
 #FIX me
 #PASSWORD=password
 
+
+echo "=================================Starting to install KEYSTONE==========================================="
+echo
+echo
+
 apt-get -y install ubuntu-cloud-keyring
 
 cat > /etc/apt/sources.list.d/20-cloudarchive.list  << EOF
@@ -19,56 +24,45 @@ EOF
 
 apt-get update ; apt-get -y install keystone
 
+# Stop it! tend to start to install-time
+/etc/init.d/keystone start
 
-echo "=================================Starting to install KEYSTONE==========================================="
+
+echo "=================================Starting to install MYSQL ==========================================="
 echo
 echo
-
 
 #Prepare MySQL 
 sudo debconf-set-selections <<< 'mysql-server mysql-server/root_password password cangetin'
 sudo debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password cangetin'
 apt-get -y install mysql-server python-mysqldb
-mysql -uroot -pswiftstack -e "CREATE DATABASE keystone"
-mysql -uroot -pswiftstack -e "GRANT ALL ON keystone.* TO 'keystone'@'*' IDENTIFIED BY 'cangetin'"
-mysql -uroot -pswiftstack -e "GRANT ALL ON keystone.* TO 'keystone'@'localhost' IDENTIFIED BY 'cangetin'"
+mysql -uroot -pcangetin -e "CREATE DATABASE keystone"
+mysql -uroot -pcangetin -e "GRANT ALL ON keystone.* TO 'keystone'@'*' IDENTIFIED BY 'cangetin'"
+mysql -uroot -pcangetin -e "GRANT ALL ON keystone.* TO 'keystone'@'localhost' IDENTIFIED BY 'cangetin'"
 sudo sed -i 's/127.0.0.1/0.0.0.0/g' /etc/mysql/my.cnf
 sudo service mysql restart
 
 #Configuration Section
 
-sed -e 's/# connection = sqlite:\/\/\/keystone.db/connection = mysql:\/\/keystone:cangetin@localhost\/keystone/' -i /etc/keystone/keystone.conf
+sed -e 's@connection = sqlite:////var/lib/keystone/keystone.db@connection = mysql://keystone:cangetin\@localhost/keystone@' -i /etc/keystone/keystone.conf
+
 sed 's/#token_format =/token_format = UUID/' -i /etc/keystone/keystone.conf
 sed 's/ec2_extension user_crud_extension/ec2_extension s3_extension user_crud_extension/' -i /etc/keystone/keystone-paste.ini
 
-
-#Add keystone user
-useradd keystone
-
-#Create log folder
-mkdir /var/log/keystone  
-sleep 2 
-chown -R keystone:keystone /var/log/keystone
 
 #Populate Data into keystone DB
 keystone-manage db_sync
 
 sleep 1
-# Copy upstart and service start script 
-################## UPSTART ######################
 
-cd $ORIGINAL_DIR ; cp keystone-init.d /etc/init.d/keystone ; cp keystone.conf-init /etc/init/keystone.conf
-
-service keystone start 
-sleep 3
-service keystone status
+/etc/init.d/keystone start
 
 ################################################
 
 ###### Inject Sample Data ######
-CONTROLLER_PUBLIC_ADDRESS=${SWIFT_IP}
-CONTROLLER_ADMIN_ADDRESS=${SWIFT_IP}
-CONTROLLER_INTERNAL_ADDRESS=${127.0.0.1}
+CONTROLLER_PUBLIC_ADDRESS=$SWIFT_IP
+CONTROLLER_ADMIN_ADDRESS=$SWIFT_IP
+CONTROLLER_INTERNAL_ADDRESS='127.0.0.1'
 
 #TOOLS_DIR=$(cd $(dirname "$0") && pwd)
 KEYSTONE_CONF=${KEYSTONE_CONF:-/etc/keystone/keystone.conf}
@@ -108,6 +102,13 @@ ADMIN_USER=$(get_id keystone user-create --name=admin \
 
 ADMIN_ROLE=$(get_id keystone role-create --name=admin)
 
+OPERATOR_ROLE=$(get_id keystone role-create --name=SwiftOperator)
+
+RESELLER_ROLE=$(get_id keystone role-create --name=ResellerAdmin)
+
+MEMBER_ROLE=$(get_id keystone role-create --name=Member)
+
+
 keystone user-role-add --user-id $ADMIN_USER \
                        --role-id $ADMIN_ROLE \
                        --tenant-id $DEMO_TENANT
@@ -135,7 +136,7 @@ keystone service-create --name=keystone \
                         --type=identity \
                         --description="Keystone Identity Service")
 if [[ -z "$DISABLE_ENDPOINTS" ]]; then
-    keystone endpoint-create --region RegionOne --service-id $KEYSTONE_SERVICE \
+    keystone endpoint-create --region LON --service-id $KEYSTONE_SERVICE \
         --publicurl "http://$CONTROLLER_PUBLIC_ADDRESS:\$(public_port)s/v2.0" \
         --adminurl "http://$CONTROLLER_ADMIN_ADDRESS:\$(admin_port)s/v2.0" \
         --internalurl "http://$CONTROLLER_INTERNAL_ADDRESS:\$(public_port)s/v2.0"
@@ -150,7 +151,7 @@ keystone service-create --name=swift \
                         --type="object-store" \
                         --description="Swift Service")
 if [[ -z "$DISABLE_ENDPOINTS" ]]; then
-    keystone endpoint-create --region RegionOne --service-id $SWIFT_SERVICE \
+    keystone endpoint-create --region LON --service-id $SWIFT_SERVICE \
         --publicurl   "http://$SWIFT_IP/v1/KEY_\$(tenant_id)s" \
         --adminurl    "http://$CONTROLLER_ADMIN_ADDRESS/v1" \
         --internalurl "http://$CONTROLLER_INTERNAL_ADDRESS/v1/KEY_\$(tenant_id)s"
@@ -162,21 +163,26 @@ sleep 2
 echo
 echo "==================Create User/Password/Tenant : swiftstack/password/SS===================="
 
-SS_TENANT=$(get_id \
-keystone tenant-create --name SS --enabled true --description "Test Tenant")
-keystone user-create --name swiftstack --pass password --tenant-id $SS_TENANT --email support@swiftstack.com --enabled true
+$SOHONET_T_NAME=sohonet
+
+SOHONET_TENANT=$(get_id \
+keystone tenant-create --name $SOHONET_T_NAME --enabled true --description "Sohonet Tenant")
+keystone user-create --name demo1 --pass password --tenant-id $SOHONET_TENANT --email support@sohonet.com --enabled true
+keystone user-role-add --user-id 'demo1' \
+                       --role-id 'SwiftOperator' \
+                       --tenant-id $SOHONET_T_NAME
+keystone user-create --name demo2 --pass password --tenant-id $SOHONET_TENANT --email support@sohonet.com --enabled true
+keystone user-role-add --user 'demo2' \
+                       --role 'SwiftOperator' \
+                       --tenant $SOHONET_T_NAME
 
 echo
 echo "================= Test v2.0 API to get TOKEN/Service Catalog of user swiftstack =================="
 sleep 2
 
-curl -d '{"auth":{"passwordCredentials":{"username": "swiftstack", "password": "password"},"tenantName":"SS"}}' -H "Content-type: application/json" http://localhost:5000/v2.0/tokens | python -mjson.tool
+curl -d '{"auth":{"passwordCredentials":{"username": "demo1", "password": "password"},"tenantName":"sohonet"}}' -H "Content-type: application/json" http://localhost:5000/v2.0/tokens | python -mjson.tool
 
-sleep 2
-echo
-echo "================== Test Keystone V3 API to get TOKEN/Service Catalog of user swiftstack ====================="
-
-curl -d '{"auth":{"identity":{"methods":["password"],"password":{"user":{"domain":{"name":"default"},"name":"swiftstack","password":"password"}}},"scope":{"project":{"domain":{"name":"default"},"name":"SS"}}}}' -H "Content-type: application/json" http://localhost:5000/v3/auth/tokens | python -mjson.tool
+sleep 5
 
 echo "===========Keystone Middleware setting for this deployment============="
 
