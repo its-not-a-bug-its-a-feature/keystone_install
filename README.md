@@ -6,10 +6,10 @@ Please run as root
     # Install git (if necessary)
     apt-get install -y git
 	cd /root
-	git clone https://github.com/swiftstack/keystone_install.git
+	git clone https://github.com/its-not-a-bug-its-a-feature/keystone_install.git
 	cd keystone_install
 	./install_keystone.sh
 
 This is a quick keystone deploying script
 
-The Keystone Version is Fixed to ``stable/Havana``
+OS Required : Ubuntu Precise 12:04 .  The Cloud Archive for Precise currently uses Openstack version   ``havana``
