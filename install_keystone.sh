@@ -18,14 +18,14 @@ echo
 apt-get -y install ubuntu-cloud-keyring
 
 cat > /etc/apt/sources.list.d/20-cloudarchive.list  << EOF
-deb http://ubuntu-cloud.archive.canonical.com/ubuntu precise-updates/grizzly main
-deb-src http://ubuntu-cloud.archive.canonical.com/ubuntu precise-updates/grizzly main
+deb http://ubuntu-cloud.archive.canonical.com/ubuntu precise-updates/havana main
+deb-src http://ubuntu-cloud.archive.canonical.com/ubuntu precise-updates/havana main
 EOF
 
 apt-get update ; apt-get -y install keystone
 
 # Stop it! tend to start to install-time
-/etc/init.d/keystone start
+/etc/init.d/keystone stop
 
 
 echo "=================================Starting to install MYSQL ==========================================="
@@ -49,22 +49,28 @@ sed -e 's@connection = sqlite:////var/lib/keystone/keystone.db@connection = mysq
 sed 's/#token_format =/token_format = UUID/' -i /etc/keystone/keystone.conf
 sed 's/ec2_extension user_crud_extension/ec2_extension s3_extension user_crud_extension/' -i /etc/keystone/keystone-paste.ini
 
+echo "=================================Starting keystone app DB sync ==========================================="
+echo
 
 #Populate Data into keystone DB
 keystone-manage db_sync
 
-sleep 1
+sleep 10
+
+
+echo "=================================Starting keystone ==========================================="
+echo
 
 /etc/init.d/keystone start
 
-################################################
+echo "=================================Starting data entry =========================================="
+echo
 
 ###### Inject Sample Data ######
 CONTROLLER_PUBLIC_ADDRESS=$SWIFT_IP
 CONTROLLER_ADMIN_ADDRESS=$SWIFT_IP
 CONTROLLER_INTERNAL_ADDRESS='127.0.0.1'
 
-#TOOLS_DIR=$(cd $(dirname "$0") && pwd)
 KEYSTONE_CONF=${KEYSTONE_CONF:-/etc/keystone/keystone.conf}
 
 # Extract some info from Keystone's configuration file
