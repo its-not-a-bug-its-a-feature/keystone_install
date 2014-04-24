@@ -52,6 +52,12 @@ sed 's/ec2_extension user_crud_extension/ec2_extension s3_extension user_crud_ex
 echo "=================================Starting keystone app DB sync ==========================================="
 echo
 
+echo "== connection line in /etc/keystone/keystone.conf : "
+echo
+grep ^connection /etc/keystone/keystone.conf
+echo "EXIT now if that is incorrect !"
+sleep 5
+
 #Populate Data into keystone DB
 keystone-manage db_sync
 
