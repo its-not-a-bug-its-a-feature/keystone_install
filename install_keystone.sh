@@ -1,26 +1,47 @@
 #!/usr/bin/env bash 
 
+FIRSTARG=$1
 
 echo "Please Enter your Swift and Keystone IP for the Service Catalog:"
 read SWIFT_IP
 echo 
 echo 
 ORIGINAL_DIR=$(pwd)
+    
+FLAVOUR="OS_DEFAULT"
 
-#FIX me
-#PASSWORD=password
+case $FIRSTARG in
+    "precise-havana"       ) FLAVOUR="CLOUD_ARCHIVE_HAVANA";;
+    "precise-grizzly"  )     FLAVOUR="CLOUD_ARCHIVE_PRECISE";;
+esac
 
+echo "Running keystone_install and will install using :  $FLAVOUR. Exit now to abort"
+sleep 10.
 
 echo "=================================Starting to install KEYSTONE==========================================="
 echo
 echo
 
-apt-get -y install ubuntu-cloud-keyring curl
+apt-get -y install curl
 
-cat > /etc/apt/sources.list.d/20-cloudarchive.list  << EOF
+if [ $FLAVOUR = "CLOUD_ARCHIVE_HAVANA" ] || [ $FLAVOUR = "CLOUD_ARCHIVE_PRECISE" ]; then
+    apt-get -y install ubuntu-cloud-keyring 
+fi 
+
+
+if [ $FLAVOUR = "CLOUD_ARCHIVE_HAVANA" ]; then
+    cat > /etc/apt/sources.list.d/20-cloudarchive.list  << EOF
 deb http://ubuntu-cloud.archive.canonical.com/ubuntu precise-updates/havana main
 deb-src http://ubuntu-cloud.archive.canonical.com/ubuntu precise-updates/havana main
 EOF
+fi
+
+if [ $FLAVOUR = "CLOUD_ARCHIVE_PRECISE" ]; then
+    cat > /etc/apt/sources.list.d/20-cloudarchive.list  << EOF
+deb http://ubuntu-cloud.archive.canonical.com/ubuntu precise-updates/grizzly main
+deb-src http://ubuntu-cloud.archive.canonical.com/ubuntu precise-updates/grizzly main
+EOF
+fi
 
 apt-get update ; apt-get -y install keystone
 
