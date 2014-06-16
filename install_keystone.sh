@@ -97,6 +97,8 @@ echo
 CONTROLLER_PUBLIC_ADDRESS=$SWIFT_IP
 CONTROLLER_ADMIN_ADDRESS=$SWIFT_IP
 CONTROLLER_INTERNAL_ADDRESS="127.0.0.1"
+CONFIG_ADMIN_PORT=35357
+CONFIG_PUBLIC_PORT=5000
 
 KEYSTONE_CONF=${KEYSTONE_CONF:-/etc/keystone/keystone.conf}
 
@@ -154,7 +156,7 @@ SWIFT_USER=$(get_id keystone user-create --name=swift \
                                          --pass=password \
                                          --tenant-id $SERVICE_TENANT)
 
-keystone user-role-add --user admin --role admin --tenant demo
+keystone user-role-add --user admin --role admin --tenant service
 
 #
 # Keystone service
@@ -164,7 +166,10 @@ keystone service-create --name=keystone \
                         --type=identity \
                         --description="Keystone Identity Service")
 if [[ -z "$DISABLE_ENDPOINTS" ]]; then
-    keystone endpoint-create --region LON --service-id $KEYSTONE_SERVICE --publicurl "http://$CONTROLLER_PUBLIC_ADDRESS/v2.0" --adminurl "http://$CONTROLLER_ADMIN_ADDRESS/v2.0" --internalurl "http://$CONTROLLER_INTERNAL_ADDRESS/v2.0"
+    keystone endpoint-create --region RegionOne --service-id $KEYSTONE_SERVICE \
+        --publicurl "http://$CONTROLLER_PUBLIC_ADDRESS:$CONFIG_PUBLIC_PORT/v2.0" \
+        --adminurl "http://$CONTROLLER_ADMIN_ADDRESS:$CONFIG_ADMIN_PORT/v2.0" \
+        --internalurl "http://$CONTROLLER_INTERNAL_ADDRESS:$CONFIG_PUBLIC_PORT/v2.0"
 fi
 
 
@@ -176,7 +181,10 @@ keystone service-create --name=swift \
                         --type="object-store" \
                         --description="Swift Service")
 if [[ -z "$DISABLE_ENDPOINTS" ]]; then
-    keystone endpoint-create --region LON --service-id $SWIFT_SERVICE --publicurl   "http://$SWIFT_IP/v1/AUTH_\$(tenant_id)s" --adminurl    "http://$CONTROLLER_ADMIN_ADDRESS/v1" --internalurl "http://$CONTROLLER_INTERNAL_ADDRESS/v1/AUTH_\$(tenant_id)s"
+    keystone endpoint-create --region LON --service-id $SWIFT_SERVICE \
+        --publicurl   "http://$SWIFT_IP/v1/AUTH_\$(tenant_id)s" \
+        --adminurl    "http://$CONTROLLER_ADMIN_ADDRESS/v1" \
+        --internalurl "http://$CONTROLLER_INTERNAL_ADDRESS/v1/AUTH_\$(tenant_id)s"
 fi
 
 echo "==================Smaple data Inject Finished=========================="
